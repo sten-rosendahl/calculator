@@ -1,0 +1,45 @@
+stages:
+  - lint-css-js
+  - unit-test
+  - build-push-image
+
+image: node:6.11.2
+
+lint css js:
+  stage: lint-css-js
+  before_script:
+    - npm install
+  cache:
+    untracked: true
+  only:
+    - master
+  script:
+    - ./node_modules/gulp/bin/gulp.js lint-css
+    - ./node_modules/gulp/bin/gulp.js lint-js
+ 
+run unit test:
+  stage: unit-test
+  cache:
+    untracked: true
+    policy: pull
+  only:
+    - master
+  script:
+    - ./node_modules/gulp/bin/gulp.js test
+  
+build and push image:
+  stage: build-push-image
+  image: docker:19.03.12
+  cache:
+    untracked: true
+    policy: pull
+  only:
+    - master
+  services:
+    - docker:19.03.12-dind
+  variables:
+    IMAGE_TAG: $CI_PROJECT_NAME:$CI_COMMIT_REF_SLUG
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
