@@ -1,0 +1,5 @@
+jobs:
+  build:
+    steps:
+      - name: build
+        uses: actions/aws/ec2@main
